@@ -22,8 +22,6 @@ conditions.
 #include <string.h>
 #include <stdlib.h>
 
-#define ROTATE e = d; d = c; c = ROL(b, 30); b = a; a = g;
-
 uint32_t ROL(uint32_t val, uint32_t shift) {
     shift &= 0x1f;
     val = (val >> (0x20 - shift)) | (val << shift);
@@ -32,41 +30,46 @@ uint32_t ROL(uint32_t val, uint32_t shift) {
 
 void xsha1_calcHashBuf(const char* input, size_t length, uint32_t* result) {
     void *dataptr = malloc(1024);
+    memset(dataptr, 0, 1024);
     uint32_t *data = (uint32_t *) dataptr;
     memcpy(data, input, length);
 
-    for (int i = 0; i < 64; i++) {
-        data[i + 16] = ROL(1, (int) (data[i] ^ data[i + 8] ^ data[i + 2] ^ data[i + 13]) % 32);
+    for (int i = 16; i < 80; i++) {
+        data[i] = ROL(1, (int) (data[i-16] ^ data[i-8] ^ data[i-14] ^ data[i-3]) % 32);
     }
 
-    uint32_t a = 0x67452301;
-    uint32_t b = 0xefcdab89;
-    uint32_t c = 0x98badcfe;
-    uint32_t d = 0x10325476;
-    uint32_t e = 0xc3d2e1f0;
-    uint32_t g = 0;
+    uint32_t A = 0x67452301;
+    uint32_t B = 0xefcdab89;
+    uint32_t C = 0x98badcfe;
+    uint32_t D = 0x10325476;
+    uint32_t E = 0xc3d2e1f0;
 
+    uint32_t temp = 0;
     for (int i = 0; i < 20; i++) {
-        g = *data++ + ROL(a, 5) + e + ((b & c) | (~b & d)) + 0x5A827999; ROTATE;
-    }
-
-    for (int i = 0; i < 20; i++) {
-        g = (d ^ c ^ b) + e + ROL(g, 5) + *data++ + 0x6ed9eba1; ROTATE;
+        temp = *data++ + ROL(A, 5) + E + ((B & C) | (~B & D)) + 0x5A827999;
+        E = D; D = C; C = ROL(B, 30); B = A; A = temp;
     }
 
     for (int i = 0; i < 20; i++) {
-        g = *data++ + ROL(g, 5) + e + ((c & b) | (d & c) | (d & b)) - 0x70E44324; ROTATE;
+        temp = (D ^ C ^ B) + E + ROL(temp, 5) + *data++ + 0x6ed9eba1;
+        E = D; D = C; C = ROL(B, 30); B = A; A = temp;
     }
 
     for (int i = 0; i < 20; i++) {
-        g = (d ^ c ^ b) + e + ROL(g, 5) + *data++ - 0x359d3e2a; ROTATE;
+        temp = *data++ + ROL(temp, 5) + E + ((C & B) | (D & C) | (D & B)) - 0x70E44324;
+        E = D; D = C; C = ROL(B, 30); B = A; A = temp;
     }
 
-    *result++ = 0x67452301 + a;
-    *result++ = 0xefcdab89 + b;
-    *result++ = 0x98badcfe + c;
-    *result++ = 0x10325476 + d;
-    *result   = 0xc3d2e1f0 + e;
+    for (int i = 0; i < 20; i++) {
+        temp = (D ^ C ^ B) + E + ROL(temp, 5) + *data++ - 0x359d3e2a;
+        E = D; D = C; C = ROL(B, 30); B = A; A = temp;
+    }
+
+    result[0] = A + 0x67452301;
+    result[1] = B + 0xefcdab89;
+    result[2] = C + 0x98badcfe;
+    result[3] = D + 0x10325476;
+    result[4] = E + 0xc3d2e1f0;
 
     free(dataptr);
 }
