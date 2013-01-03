@@ -62,8 +62,6 @@ void xsha1_calcHashBuf(const char* input, size_t length, uint32_t* result) {
         g = (d ^ c ^ b) + e + ROL(g, 5) + *data++ - 0x359d3e2a; ROTATE;
     }
 
-    uint32_t *ldata = (uint32_t *) result;
-
     *result++ = 0x67452301 + a;
     *result++ = 0xefcdab89 + b;
     *result++ = 0x98badcfe + c;
