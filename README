@@ -1,4 +1,4 @@
-"Broken SHA-1" or "X-SHA-1" is the algorithm used to has passwords and CD-Keys to log into Battle.net using the "Old Login System."
+"Broken SHA-1" or "X-SHA-1" is the algorithm used to hash passwords and CD-Keys to log into Battle.net using the "Old Login System."
 
 DO NOT use this algorithm for new development unrelated to Battle.net. It is incredibly insecure due to flaws in it's cryptography. Read about hasing algorithms on Wikipedia before choosing which to use to secure your user's data:
 http://en.wikipedia.org/wiki/Hash_function
